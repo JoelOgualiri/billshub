@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model bills {
+  due_date        DateTime?
+  amount          String    @db.VarChar(45)
+  customerId      Int
+  id              Int       @id @default(autoincrement())
+  name            String    @db.VarChar(45)
+  reminder_length Int?
+  reoccuring      Boolean   @default(true)
+  customer        customer  @relation(fields: [customerId], references: [id])
+
+  @@index([customerId], map: "bills_customerId_fkey")
+}
+
+model customer {
+  username        String        @unique
+  firstname       String        @db.VarChar(45)
+  lastname        String        @db.VarChar(45)
+  email           String        @db.VarChar(45)
+  signup_date     DateTime      @default(now())
+  city            String
+  country         String
+  id              Int           @id @default(autoincrement())
+  role            customer_role @default(USER)
+  updatedAt       DateTime
+  hashed_password String        @db.VarChar(128)
+  salt            String        @db.VarChar(45)
+  bills           bills[]
+}
+
+enum customer_role {
+  USER
+  ADMIN
+}
