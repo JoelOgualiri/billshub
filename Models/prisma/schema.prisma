@@ -24,13 +24,13 @@ model customer {
   username        String        @unique
   firstname       String        @db.VarChar(45)
   lastname        String        @db.VarChar(45)
-  email           String        @db.VarChar(45)
+  email           String        @unique @db.VarChar(45)
   signup_date     DateTime      @default(now())
   city            String
   country         String
   id              Int           @id @default(autoincrement())
   role            customer_role @default(USER)
-  updatedAt       DateTime
+  updatedAt       DateTime      @updatedAt
   hashed_password String        @db.VarChar(128)
   salt            String        @db.VarChar(45)
   bills           bills[]

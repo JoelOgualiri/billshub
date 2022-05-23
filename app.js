@@ -7,7 +7,7 @@ const LocalStrategy = require('passport-local');
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const crypto = require('crypto');
-var session
+var session = {};
 
 const customerRoutes = require('./Routes/customerRoutes');
 const loginRoute = require('./Routes/loginRoute');
@@ -16,6 +16,9 @@ require('dotenv').config()
 app.use(express.json());
 app.use(cors());
 
+
+app.use(loginRoute);
+app.use(customerRoutes);
 
 passport.serializeUser(function (user, done) {
     done(null, user);
@@ -58,18 +61,6 @@ passport.use(new LocalStrategy(async function verify(username, password, done) {
     })
 }));
 //Create User
-const generatePassword = (password) => {
-    const salt = crypto.randomBytes(16).toString('base64');
-    const iterations = 310000;
-    const keylen = 32;
-    const digest = 'sha256';
-    const hashed_password = crypto.pbkdf2Sync(password, salt, iterations, keylen, digest).toString('hex')
-    return {
-        salt: salt,
-        hashed_password: hashed_password,
-        iterations: iterations
-    };
-};
 
 
 //Login User
@@ -77,15 +68,14 @@ const generatePassword = (password) => {
 app.post('/login', passport.authenticate('local', {
     failureRedirect: '/access'
 }), (req, res) => {
-    session = req.session;
-    console.log(session)
-    session.userid = req.body.username;
-    console.log(req.sessionID)
+    session[req.body.username] = req.session;
+
+    //session.userid = req.body.username;
+    //console.log(req.sessionID)
+    console.log(session);
     res.send("successful login")
 }
-)
-
-
+);
 app.listen(process.env.PORT || 3002, () => {
     console.log(`Server is running on port ${process.env.PORT}`);
 })
