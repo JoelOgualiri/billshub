@@ -19,6 +19,7 @@ const generatePassword = (password) => {
     };
 };
 
+
 async function getAllCustomers() {
     const res = await prisma.customer.findMany();
     //console.log(res)
