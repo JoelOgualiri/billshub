@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function Login({ Login }) {
+export default function Login({ Login, setToken }) {
     const [loginDetails, setloginDetails] = useState({ username: '', password: '' });
     const submitHandler = e => {
         e.preventDefault();
