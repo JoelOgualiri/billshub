@@ -10,7 +10,7 @@ export default function Bills({ sessionID }) {
     const [userBills, setUserBills] = useState([]);
 
     const getBills = async () => {
-        await axios.get("http://localhost:3002/home", { params: { sessionID: session_ID } }).then((res) => {
+        await axios.get("http://localhost:3002/", { params: { sessionID: session_ID } }).then((res) => {
             setUserBills(res.data)
         })
     }
@@ -21,7 +21,7 @@ export default function Bills({ sessionID }) {
         fetchBills()
     }, [])
     return (
-        <div>
+        <div className='billDisplay'>
             {userBills.length > 0 ? userBills.map(bill => { return (<Bill key={bill.id} bill={bill} />) }) : "No Bills to Show"}
             <CreateBill />
         </div>

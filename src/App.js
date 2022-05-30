@@ -2,8 +2,7 @@ import axios from 'axios';
 import './index.css'
 import React, { useState, useEffect } from 'react';
 import LoginForm from './components/Loginform';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import './App.css';
+import { BrowserRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import Preferences from './components/Preferences';
 import Bills from './components/Bills';
 import useSessionID from './components/useSessionID';
@@ -12,6 +11,14 @@ import { BrandLogo } from './components/BrandLogo';
 import { Button } from './components/Button';
 
 function App() {
+
+  let navigate = useNavigate();
+  const routeChange = () => {
+    console.log("logged out")
+    let path = `login`;
+    navigate(path);
+  }
+
   const { sessionID, setSessionID } = useSessionID()
   const Login = async (loginDetails) => {
     try {
@@ -26,27 +33,26 @@ function App() {
   };
   const Logout = async () => {
     sessionStorage.removeItem('sessionID')
-    await axios.get("http://localhost:3002/logout").then((res) => {
-      console.log("Logged out!")
-      res.redirect('/login')
-    })
+    await axios.get("http://localhost:3002/logout")
+    console.log("logged out")
+    navigate('login');
   };
 
   if (!sessionID) {
     return <LoginForm Login={Login} />
   }
   return (
-    <BrowserRouter>
-      <div className="wrapper">
-        <BrandLogo />
-        <Button onClick={Logout} text="Signout" />
-        <Routes>
-          <Route path="/" element={<Bills sessionID={sessionID} />} />
-          <Route path="/createbill" element={<CreateBillForm sessionID={sessionID} />} />
-          <Route path="/preferences" element={<Preferences />} />
-        </Routes>
-      </div>
-    </BrowserRouter>
+
+    <div className="wrapper">
+      <BrandLogo />
+      <Button onClick={Logout} text="Signout" />
+      <Routes>
+        <Route path="/" element={<Bills sessionID={sessionID} />} />
+        <Route path="/createbill" element={<CreateBillForm sessionID={sessionID} />} />
+        <Route path="/preferences" element={<Preferences />} />
+      </Routes>
+    </div>
+
   );
 }
 
