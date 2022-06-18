@@ -5,8 +5,10 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const router = express.Router(); //creates a new instance of a router object
 const crypto = require("crypto");
+const deleteBills = require('./billsRoute');
 
-const generatePassword = (password) => {
+
+const generateHashedPassword = (password) => {
     const salt = crypto.randomBytes(16).toString('base64');
     const iterations = 310000;
     const keylen = 32;
@@ -19,29 +21,33 @@ const generatePassword = (password) => {
     };
 };
 
-
 async function getAllCustomers() {
     const res = await prisma.customer.findMany();
     //console.log(res)
     return res
 }
-
 async function createCustomer(customerDetails) {
-    const res = await prisma.customer.create({
-        data: customerDetails
-    });
-    console.log(res)
-    return res
-
+    const user = await prisma.customer.findFirst({
+        data: customerDetails.email
+    })
+    if (!user) {
+        const res = await prisma.customer.create({
+            data: customerDetails
+        });
+        return res
+    } else {
+        res.send("user already exists")
+    }
 }
+
 router.get('/allUsers', async (req, res) => {
     //console.log(await getAllCustomers());
+    console.log(req)
     res.send(await getAllCustomers())
 
 })
-
-router.post('/newUser', async (req, res) => {
-    const passwordData = generatePassword(req.body.password);
+router.post('/signup', async (req, res) => {
+    const passwordData = generateHashedPassword(req.body.password);
     const customerDetails = {
         "username": req.body.username,
         "hashed_password": passwordData.hashed_password,
@@ -54,6 +60,17 @@ router.post('/newUser', async (req, res) => {
         "country": req.body.country,
     }
     res.send(createCustomer(customerDetails))
+})
+router.delete('/admin/customer/account/:id', async (req, res) => {
+    const customerID = Number(req.params.id)
+    console.log(customerID)
+    const deleteCustomer = prisma.customer.delete({
+        where: {
+            id: customerID,
+        },
+    })
+    const transaction = await prisma.$transaction([deleteBills(customerID), deleteCustomer])
+    res.send(transaction)
 })
 
 module.exports = router;

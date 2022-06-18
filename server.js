@@ -7,26 +7,24 @@ const LocalStrategy = require('passport-local');
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const crypto = require('crypto');
-//setup redis
-const redis = require('redis');
+const { isAuth, isAdmin } = require("./Routes/authRoute")
+const client = require('./helpers/init_redis')
+
+
 let RedisStore = require("connect-redis")(session)
-const { createClient } = require("redis")
-let redisClient = createClient({ legacyMode: true })
-redisClient.connect().catch(console.error)
 
 const customerRoutes = require('./Routes/customerRoutes');
 const billsRoute = require('./Routes/billsRoute');
-var sess = {};
 
 require('dotenv').config();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({ credentials: true, origin: "http://localhost:3000" }))
+
 
 //Routes
 app.use(customerRoutes);
 app.use(billsRoute);
-
 
 passport.serializeUser(function (user, done) {
     done(null, user);
@@ -34,17 +32,19 @@ passport.serializeUser(function (user, done) {
 passport.deserializeUser(function (user, done) {
     done(null, user);
 });
+
 app.use(session({
-    key: 'connect.sid',
+    key: 'sessionID',
     secret: process.env.secret,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24
+        maxAge: 1000 * 60 * 60 * 24,
+        httpOnly: false
     },
-    // create new redis store.
-    store: new RedisStore({ client: redisClient }),
+    store: new RedisStore({ client: client }),
     resave: false,
     saveUninitialized: true
 }));
+
 
 passport.use(new LocalStrategy(async function verify(username, password, done) {
     const user = await prisma.customer.findUnique({
@@ -62,7 +62,7 @@ passport.use(new LocalStrategy(async function verify(username, password, done) {
             return done(err)
         }
         if (user.hashed_password !== hashedPassword.toString('hex')) {
-            console.log(hashedPassword.toString('hex'))
+            //console.log(hashedPassword.toString('hex'))
             return done(null, false, { message: "Incorrect username or password" });
         }
         return done(null, user);
@@ -71,17 +71,25 @@ passport.use(new LocalStrategy(async function verify(username, password, done) {
 
 app.post('/login', passport.authenticate('local'), (req, res) => {
     req.session.userid = req.body.username;
-    const sess = req.session;
+    req.session.isAuth = true
+    req.session.isAdmin = req.session.passport.user.role === 'ADMIN' ? true : false
+    //console.log(req.session.cookie)
+    //const sess = req.session;
+    //res.set('Set-Cookie', `session=${req.sessionID}`)
+    //res.cookie('session_id', req.sessionID, { maxAge: 900000, httpOnly: false, secure: true })
+    //res.send(200);
+    //console.log(res)
+    //res.send
     res.send(req.sessionID);
 }
 );
-app.get('/logout', (req, res) => {
-    console.log(req.session)
+app.get('/logout', isAuth, isAdmin, (req, res) => {
     req.session.destroy();
-    res.redirect('/login')
+    res.sendStatus(200)
 })
+
 app.listen(process.env.PORT || 3002, () => {
     console.log(`Server is running on port ${process.env.PORT}`);
 })
 
-module.exports = redisClient
+//module.exports = redisClient

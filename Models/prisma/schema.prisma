@@ -8,14 +8,18 @@ datasource db {
 }
 
 model bills {
-  due_date        DateTime?
-  amount          Float
-  customerId      Int
-  id              Int       @id @default(autoincrement())
-  name            String    @db.VarChar(45)
-  reminder_length Int?
-  reoccuring      Boolean   @default(true)
-  customer        customer  @relation(fields: [customerId], references: [id])
+  start_date DateTime?
+  amount     Float
+  customerId Int
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(45)
+  alert      Int?
+  repeat     Boolean   @default(true)
+  settled    Boolean   @default(false)
+  deleted    Boolean   @default(false)
+  frequency  String?   @db.VarChar(45)
+  end_date   DateTime?
+  customer   customer  @relation(fields: [customerId], references: [id])
 
   @@index([customerId], map: "bills_customerId_fkey")
 }
