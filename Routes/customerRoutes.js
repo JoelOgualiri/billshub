@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 const router = express.Router(); //creates a new instance of a router object
 const crypto = require("crypto");
 const deleteBills = require('./billsRoute');
-
+const { isAdmin, isAuth } = require('./authRoute')
 
 const generateHashedPassword = (password) => {
     const salt = crypto.randomBytes(16).toString('base64');
@@ -40,7 +40,7 @@ async function createCustomer(customerDetails) {
     }
 }
 
-router.get('/allUsers', async (req, res) => {
+router.get('/allUsers', isAuth, isAdmin, async (req, res) => {
     //console.log(await getAllCustomers());
     console.log(req)
     res.send(await getAllCustomers())
@@ -61,7 +61,7 @@ router.post('/signup', async (req, res) => {
     }
     res.send(createCustomer(customerDetails))
 })
-router.delete('/admin/customer/account/:id', async (req, res) => {
+router.delete('/admin/customer/account/:id', isAuth, isAdmin, async (req, res) => {
     const customerID = Number(req.params.id)
     console.log(customerID)
     const deleteCustomer = prisma.customer.delete({

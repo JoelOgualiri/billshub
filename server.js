@@ -84,6 +84,7 @@ app.post('/login', passport.authenticate('local'), (req, res) => {
 }
 );
 app.get('/logout', isAuth, isAdmin, (req, res) => {
+    console.log(req.session);
     req.session.destroy();
     res.sendStatus(200)
 })

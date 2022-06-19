@@ -8,13 +8,13 @@ datasource db {
 }
 
 model bills {
-  start_date DateTime?
+  due_date   DateTime?
   amount     Float
   customerId Int
   id         Int       @id @default(autoincrement())
   name       String    @db.VarChar(45)
   alert      Int?
-  repeat     Boolean   @default(true)
+  repeat     Boolean   @default(false)
   settled    Boolean   @default(false)
   deleted    Boolean   @default(false)
   frequency  String?   @db.VarChar(45)

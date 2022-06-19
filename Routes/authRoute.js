@@ -2,9 +2,9 @@ const client = require("../helpers/init_redis")
 
 const isAuth = (req, res, next) => {
     if (req.session.isAuth) {
+        console.log(req.session)
         next()
     } else {
-
         res.send("You are not authenticated!")
     }
 }
