@@ -129,7 +129,9 @@ Router.put('/bill', async (req, res) => {
     console.log(usersessionID)
     const session = await getSession(usersessionID);
     const billID = req.body.data.billID;
-    const updatedBill = convertDateDB([req.body.data.bill])
+    req.body.data.bill.amount = parseFloat(req.body.data.bill.amount);
+    let updatedBill = convertDateDB([req.body.data.bill]);
+
 
     if (!session) {
         res.statusCode = 403;
