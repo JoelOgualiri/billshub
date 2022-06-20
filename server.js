@@ -32,7 +32,6 @@ passport.serializeUser(function (user, done) {
 passport.deserializeUser(function (user, done) {
     done(null, user);
 });
-
 app.use(session({
     key: 'sessionID',
     secret: process.env.secret,
@@ -44,8 +43,6 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }));
-
-
 passport.use(new LocalStrategy(async function verify(username, password, done) {
     const user = await prisma.customer.findUnique({
         where: {

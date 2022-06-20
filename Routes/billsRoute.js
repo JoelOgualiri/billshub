@@ -57,14 +57,15 @@ const addBill = async (bill) => {
     return addedBill
 }
 const updateBill = async (billID, data) => {
+    console.log(data)
     await prisma.bills.update({
         where: {
             id: Number(billID)
         },
-        data: data
+        data: data[0]
     })
+    console.log("success")
 }
-
 const convertDateClient = (bills) => {
     let newBills = bills.map((bill) => {
         return ({ ...bill, due_date: bill.due_date ? moment(bill.due_date).format('LL') : "No Due Date", end_date: bill.end_date ? moment(bill.end_date).format('LL') : null })
@@ -78,7 +79,6 @@ const convertDateDB = (bills) => {
     })
     return newBills
 }
-
 const validateBill = (bill) => {
     //check properties about a bill to see if its a valid
     if (bill.repeat) {
@@ -102,7 +102,7 @@ Router.get('/', async (req, res) => {
     const customerID = await getUserID(response.userid);
     let bills = await getBills(customerID);
 
-    bills.map((bill) => validateBill(bill));
+    //bills.map((bill) => validateBill(bill));
 
     bills = convertDateClient(bills);
     res.send(bills)
@@ -124,16 +124,21 @@ Router.post('/bill', async (req, res) => {
     //res.send(newBill);
 })
 
-Router.put('/bill/:billID', async (req, res) => {
-    const usersessionID = "sess:" + req.body.sessionID;
+Router.put('/bill', async (req, res) => {
+    const usersessionID = "sess:" + req.body.headers.Authorization;
+    console.log(usersessionID)
     const session = await getSession(usersessionID);
-    console.log(req.params.billID)
+    const billID = req.body.data.billID;
+    const updatedBill = convertDateDB([req.body.data.bill])
+
     if (!session) {
         res.statusCode = 403;
         return [];
     }
+
     try {
-        await updateBill(req.params.billID, req.body.data);
+        await updateBill(billID, updatedBill);
+
 
     } catch (error) {
         console.error(error);
@@ -147,6 +152,7 @@ Router.get('/allBills', async (req, res) => {
     res.send(allBills)
 })
 Router.delete('/bill', async (req, res) => {
+
     const usersessionID = "sess:" + req.headers.authorization;
     console.log(req)
     const session = await getSession(usersessionID);
