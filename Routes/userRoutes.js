@@ -28,7 +28,10 @@ async function getAllCustomers() {
 }
 async function createCustomer(customerDetails) {
     const user = await prisma.customer.findFirst({
-        data: customerDetails.email
+        where: {
+            username: customerDetails.email
+        }
+
     })
     if (!user) {
         const res = await prisma.customer.create({
