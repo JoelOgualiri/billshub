@@ -1,79 +1,116 @@
-
 const express = require("express");
-const app = express();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const router = express.Router(); //creates a new instance of a router object
-const crypto = require("crypto");
-const deleteBills = require('./billsRoute');
-const { isAdmin, isAuth } = require('./authRoute')
+const router = express.Router();
+const { isAdmin, isAuth } = require("./authRoute");
+const e = require("express");
 
-const generateHashedPassword = (password) => {
-    const salt = crypto.randomBytes(16).toString('base64');
-    const iterations = 310000;
-    const keylen = 32;
-    const digest = 'sha256';
-    const hashed_password = crypto.pbkdf2Sync(password, salt, iterations, keylen, digest).toString('hex')
-    return {
-        salt: salt,
-        hashed_password: hashed_password,
-        iterations: iterations
-    };
-};
-
-async function getAllCustomers() {
+async function getAllUsers() {
+  try {
     const res = await prisma.customer.findMany();
-    //console.log(res)
-    return res
+    return res;
+  } catch (error) {
+    return { error: "Server error! request not completed" };
+  }
 }
-async function createCustomer(customerDetails) {
-    const user = await prisma.customer.findFirst({
-        where: {
-            username: customerDetails.email
-        }
-
-    })
-    if (!user) {
-        const res = await prisma.customer.create({
-            data: customerDetails
-        });
-        return res
+async function getUser(userid) {
+  try {
+    const user = await prisma.customer.findUnique({
+      where: {
+        id: Number(userid),
+      },
+    });
+    if (user) {
+      return user;
     } else {
-        res.send("user already exists")
+      return { error: "No user found!" };
     }
+  } catch (error) {
+    return { error: "Server error!" };
+  }
+}
+async function deleteUser(userid) {
+  try {
+    const user = getUser(userid);
+    if (!user) {
+      return { error: "User does not exist" };
+    }
+    const deletedUser = prisma.customer.delete({
+      where: {
+        id: userid,
+      },
+    });
+    return deletedUser;
+  } catch (error) {
+    return { error: "Server error! Request not completed" };
+  }
+}
+async function updateUser(userid, data) {
+  try {
+    const user = getUser(userid);
+    if (!user) {
+      return { error: "User does not exist" };
+    }
+    const updatedUser = await prisma.customer.update({
+      where: {
+        id: Number(userid),
+      },
+      data: data[0],
+    });
+    return updatedUser;
+  } catch (error) {
+    return { error: "Server error! Request not completed" };
+  }
 }
 
-router.get('/allUsers', isAuth, isAdmin, async (req, res) => {
-    //console.log(await getAllCustomers());
-    console.log(req)
-    res.send(await getAllCustomers())
-
-})
-router.post('/signup', async (req, res) => {
-    const passwordData = generateHashedPassword(req.body.password);
-    const customerDetails = {
-        "username": req.body.username,
-        "hashed_password": passwordData.hashed_password,
-        "salt": passwordData.salt,
-        "firstname": req.body.firstname,
-        "lastname": req.body.lastname,
-        "email": req.body.email,
-        "role": req.body.role,
-        "city": req.body.city,
-        "country": req.body.country,
-    }
-    res.send(createCustomer(customerDetails))
-})
-router.delete('/admin/customer/account/:id', isAuth, isAdmin, async (req, res) => {
-    const customerID = Number(req.params.id)
-    console.log(customerID)
-    const deleteCustomer = prisma.customer.delete({
-        where: {
-            id: customerID,
-        },
-    })
-    const transaction = await prisma.$transaction([deleteBills(customerID), deleteCustomer])
-    res.send(transaction)
-})
+router.get("/user", isAuth, async (req, res) => {
+  const user = await getUser(req.body.id);
+  if (!user.error) {
+    res.status(200).json(user);
+  } else {
+    res.status(500).json({ message: user.error });
+  }
+});
+router.get("/admin/user", isAdmin, async (req, res) => {
+  const user = await getUser(req.body.id);
+  if (!user.error) {
+    res.status(200).json(user);
+  } else {
+    res.status(500).json({ message: user.error });
+  }
+});
+router.get("/admin/users", isAdmin, async (req, res) => {
+  const users = await getAllUsers();
+  if (!users.error) {
+    res.status(200).json(users);
+  } else {
+    res.status(500).json({ message: users.error });
+  }
+});
+router.put("/user", isAuth, async (req, res) => {
+  const updatedUser = await updateUser(req.body.id, req.body.data);
+  if (!updatedUser.error) {
+    res.status(200).json(updatedUser);
+  } else {
+    res.status(500).json({ message: updatedUser.error });
+  }
+});
+router.put("/admin/user", isAdmin, async (req, res) => {
+  const updatedUser = await updateUser(req.body.id, req.body.data);
+  if (!updatedUser.error) {
+    res.status(200).json(updatedUser);
+  } else {
+    res.status(500).json({ message: updatedUser.error });
+  }
+});
+router.delete("/admin/user", isAdmin, async (req, res) => {
+  const userid = Number(req.params.id);
+  const deletedUser = await deleteUser(userid);
+  if (!deletedUser.error) {
+    res.status(200).json(deletedUser);
+  } else {
+    res.status(500).json({ message: deletedUser.error });
+  }
+});
 
 module.exports = router;

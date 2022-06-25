@@ -92,9 +92,16 @@ const generateHashedPassword = (password) => {
   };
 };
 async function createCustomer(customerDetails) {
-  const user = await prisma.customer.findFirst({
+  const user = await prisma.customer.findMany({
     where: {
-      username: customerDetails.email,
+      OR: [
+        {
+          username: customerDetails.username,
+        },
+        {
+          email: customerDetails.email,
+        },
+      ],
     },
   });
   if (!user) {
@@ -102,8 +109,10 @@ async function createCustomer(customerDetails) {
       data: customerDetails,
     });
     return res;
+  } else if (customerDetails.username === user[0].username) {
+    return { error: "username already taken!" };
   } else {
-    return null;
+    return { error: "account exists, please log in!" };
   }
 }
 
@@ -125,13 +134,13 @@ router.post("/auth/signup", async (req, res) => {
   };
   try {
     const createdUser = await createCustomer(customerDetails);
-    if (createdUser) {
-      res.status(200).json({ message: "user created successfully!" });
+    if (!createdUser.error) {
+      res.status(200).json({ message: "User created successfully!" });
     } else {
-      res.status(500).json({ message: "user not created!" });
+      res.status(500).json({ message: createdUser.error });
     }
   } catch (error) {
-    res.status(500).json({ error: "server error, user not created!" });
+    res.status(500).json({ message: "server error, user not created!" });
   }
 });
 router.post(
