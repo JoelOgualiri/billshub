@@ -63,13 +63,21 @@ const getAllBills = async () => {
     return { error: "Server error! request not completed" };
   }
 };
-const deleteBill = async (billID) => {
-  const deletedBill = await prisma.bills.delete({
-    where: {
-      id: billID,
-    },
-  });
-  return deletedBill;
+const deleteBill = async (billID, userid) => {
+  try {
+    const deletedBill = await prisma.bills.deleteMany({
+      where: {
+        id: billID,
+        customerId: userid,
+      },
+    });
+    if (deletedBill.count === 0) {
+      return { error: "Bill doesnt exist! request not fulfilled!" };
+    }
+    return deletedBill;
+  } catch (error) {
+    return { error: "Server error! request not fulfilled!" };
+  }
 };
 const convertDateClient = (bills) => {
   let newBills = bills.map((bill) => {
@@ -93,7 +101,6 @@ const convertDateDB = (bills) => {
   });
   return newBills;
 };
-
 const getSession = async (userSessionID) => {
   const userData = await redis.get(userSessionID, (error, result) => {
     return result;
@@ -135,7 +142,9 @@ router.post("/bill", isAuth, async (req, res) => {
   let bill = req.body.bill;
   bill.customerId = userid;
   bill.amount = parseFloat(bill.amount);
-  bill.end_date = moment(bill.end_date).format();
+  if (bill.end_date) {
+    bill.end_date = moment(bill.end_date).format();
+  }
   bill = convertDateDB([bill]);
   const newBill = await createBill(bill);
   if (!newBill.error) {
@@ -167,10 +176,11 @@ router.get("/admin/bills", isAdmin, async (req, res) => {
   }
 });
 router.delete("/bill", async (req, res) => {
-  const billId = req.body.data.billID;
-  const deletedBill = await deleteBill(billId);
+  const userid = await getUserId(req.user.username);
+  const billId = req.body.billID;
+  const deletedBill = await deleteBill(billId, userid);
   if (!deletedBill.error) {
-    res.status(200).json(deletedBill);
+    res.status(200).json({ message: "Bill deleted successfully!" });
   } else {
     res.status(500).json({ message: deletedBill.error });
   }
