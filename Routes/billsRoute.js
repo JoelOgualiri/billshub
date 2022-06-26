@@ -37,14 +37,19 @@ const userBills = async (userId) => {
     return { error: "Server error! request not completed" };
   }
 };
-const updateBill = async (billId, bill) => {
+const updateBill = async (billId, bill, userid) => {
   try {
-    const updatedBill = await prisma.bills.update({
+    const updatedBill = await prisma.bills.updateMany({
       where: {
         id: Number(billId),
+        customerId: userid,
       },
+
       data: bill[0],
     });
+    if (updatedBill.count === 0) {
+      return { error: "Bill doesnt exist! request not fulfilled!" };
+    }
     return updatedBill;
   } catch (error) {
     return { error: "Server error! request not fulfilled!" };
@@ -115,7 +120,6 @@ const validateBill = (bill) => {
 
   return;
 };
-
 router.get("/bills", isAuth, async (req, res) => {
   const userid = await getUserId(req.user.username);
   let bills = await userBills(userid);
@@ -141,10 +145,13 @@ router.post("/bill", isAuth, async (req, res) => {
   }
 });
 router.put("/bill", isAuth, async (req, res) => {
-  const billId = req.body.data.billID;
-  req.body.data.bill.amount = parseFloat(req.body.data.bill.amount);
-  let bill = convertDateDB([req.body.data.bill]);
-  const updatedBill = await updateBill(billId, bill);
+  const userid = await getUserId(req.user.username);
+  const billId = req.body.billID;
+  if (req.body.bill.amount) {
+    req.body.bill.amount = parseFloat(req.body.bill.amount);
+  }
+  let bill = convertDateDB([req.body.bill]);
+  const updatedBill = await updateBill(billId, bill, userid);
   if (!updatedBill.error) {
     res.status(200).json({ message: "Bill updated successfully!" });
   } else {
