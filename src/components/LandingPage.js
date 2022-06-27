@@ -1,7 +1,31 @@
-import React from 'react';
-
+import React from "react";
+import auth from "./auth";
+import { useNavigate } from "react-router-dom";
 export default function LandingPage() {
-    return (
-        <h2>Billshub</h2>
-    );
+  let navigate = useNavigate();
+  const navigateToLogin = () => {
+    navigate("/login");
+  };
+  const navigateToSignup = () => {
+    navigate("/signup");
+  };
+  return (
+    <h1>
+      <h2>Welcome to Billshub</h2>
+      <button
+        onClick={() => {
+          navigateToLogin();
+        }}
+      >
+        LOGIN
+      </button>
+      <button
+        onClick={() => {
+          navigateToSignup();
+        }}
+      >
+        SIGNUP
+      </button>
+    </h1>
+  );
 }

@@ -1,21 +1,22 @@
-
-import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-const bull = (
-    <Box
-        component="span"
-        sx={{ display: 'inline-block', mx: '2px', transform: 'scale(0.8)' }}
-    >
-        •
-    </Box>
-);
-
-export default function Bill({ bill }) {
+export default function Bill({ bill, sessionID }) {
+    const url = "http://localhost:3002";
+    const handleDeleteBill = async () => {
+        axios.delete(`${url}/bill`, { data: { billID: bill.id }, headers: { "Authorization": sessionID } }).then(
+            console.log("success")
+        )
+    }
+    const navigate = useNavigate();
+    const navigateToEditBill = () => {
+        navigate('/editbill', { state: { bills: bill, sessionID: sessionID } })
+    }
     return (
         <Card className="bill-card" variant="outlined" sx={{ minWidth: 275 }}>
             <CardContent >
@@ -30,10 +31,10 @@ export default function Bill({ bill }) {
                 </Typography>
             </CardContent>
             <CardActions>
-                <Button size="small">Edit</Button>
+                <Button onClick={navigateToEditBill} size="small">Edit</Button>
             </CardActions>
             <CardActions>
-                <Button size="small">Close</Button>
+                <Button size="small" onClick={handleDeleteBill}>Close</Button>
             </CardActions>
         </Card>
 
