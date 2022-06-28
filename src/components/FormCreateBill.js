@@ -1,16 +1,15 @@
 import { useState, useRef } from "react";
 import axios from "axios";
 import moment from "moment";
-import Button from "./Button";
-import Bills from "./Bills";
-
+import Navbar from "./Navbar";
+import { useNavigate } from "react-router-dom";
 export default function FormCreateBill({ sessionID, onClick }) {
+  const navigate = useNavigate();
   const selectValueRepeat = useRef();
   const selectValueFrequency = useRef();
   const today = String(
     moment(new Date().toLocaleDateString("en-ca")).format("YYYY-MM-DDThh:mm")
   );
-  const session_ID = sessionID;
   const [bill, setBill] = useState({ frequency: "monthly", repeat: false });
 
   const createBill = async (bill) => {
@@ -18,7 +17,9 @@ export default function FormCreateBill({ sessionID, onClick }) {
     await axios
       .post("http://localhost:3002/bill", { bill: bill })
       .then((res) => {
-        console.log(res);
+        if (res.status === 200) {
+          navigate("/home");
+        }
         response = res.data;
       });
     return response;
@@ -33,7 +34,7 @@ export default function FormCreateBill({ sessionID, onClick }) {
   };
   return (
     <div>
-      <Button onClick={onClick} text="Signout" />
+      <Navbar />
       <form onSubmit={submitHandler}>
         <div>
           <h2>Add a new Bill</h2>
