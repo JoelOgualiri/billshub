@@ -5,17 +5,28 @@ import Bill from "./Bill";
 import CreateBill from "./CreateBill";
 import Navbar from "./Navbar";
 
-export default function Home({ onClick }) {
+export default function Home({ logout }) {
+  const navigate = useNavigate();
   const url = "http://localhost:3002";
+
+  const [userBills, setUserBills] = useState([]);
   const handleDeleteBill = async (bill) => {
+    const removeBill = bill.id;
+
     axios
-      .delete(`${url}/bill`, {
+      .delete(`${url}/bills`, {
         data: { billID: bill.id },
       })
-      .then(console.log("success"));
+      .then((res) => {
+        res.status === 200
+          ? setUserBills(
+              userBills.filter((bill) => {
+                return bill.id !== removeBill;
+              })
+            )
+          : console.log("unsuccessful");
+      });
   };
-  const [userBills, setUserBills] = useState([]);
-  const navigate = useNavigate();
   useEffect(() => {
     const fetchBills = async () => {
       await axios.get("http://localhost:3002/bills").then((res) => {
@@ -26,7 +37,7 @@ export default function Home({ onClick }) {
   }, []);
   return (
     <div className="home">
-      <Navbar />
+      <Navbar logout={logout} />
       <>
         {userBills.length > 0
           ? userBills.map((bill) => {
@@ -34,8 +45,8 @@ export default function Home({ onClick }) {
                 <Bill
                   key={bill.id}
                   bill={bill}
-                  url={url}
-                  onClick={handleDeleteBill}
+                  //url={url}
+                  deleteBill={handleDeleteBill}
                 />
               );
             })

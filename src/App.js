@@ -52,6 +52,7 @@ function App() {
     }
   };
   const Logout = async () => {
+    console.log("tried to log out");
     try {
       setisLoggedIn(false);
       Cookies.remove("connect.sid", { path: "/" });
@@ -78,32 +79,32 @@ function App() {
         <Route
           path="/home"
           element={
-            <Protected isLoggedIn={getCookie}>
-              <Home onClick={Logout} />
+            <Protected isLoggedIn={true}>
+              <Home logout={Logout} />
             </Protected>
           }
         />
         <Route
           path="/createbill"
           element={
-            <Protected isLoggedIn={isLoggedIn}>
-              <FormCreateBill onClick={Logout} />
+            <Protected isLoggedIn={true}>
+              <FormCreateBill logout={Logout} />
             </Protected>
           }
         />
         <Route
           path="/editbill"
           element={
-            <Protected isLoggedIn={isLoggedIn}>
-              <FormUpdateBill onClick={Logout} />
+            <Protected isLoggedIn={true}>
+              <FormUpdateBill logout={Logout} />
             </Protected>
           }
         />
         <Route
           path="/preferences"
           element={
-            <Protected isLoggedIn={isLoggedIn}>
-              <Preferences onClick={Logout} />
+            <Protected isLoggedIn={true}>
+              <Preferences logout={Logout} />
             </Protected>
           }
         />

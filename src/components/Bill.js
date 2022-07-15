@@ -5,7 +5,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { useNavigate } from "react-router-dom";
 
-export default function Bill({ bill, onClick }) {
+export default function Bill({ bill, deleteBill, test }) {
   const navigate = useNavigate();
   const navigateToEditBill = () => {
     navigate("/editbill", { state: { bills: bill } });
@@ -29,7 +29,12 @@ export default function Bill({ bill, onClick }) {
         </Button>
       </CardActions>
       <CardActions>
-        <Button size="small" onClick={onClick(bill)}>
+        <Button
+          size="small"
+          onClick={() => {
+            deleteBill(bill);
+          }}
+        >
           Close
         </Button>
       </CardActions>
