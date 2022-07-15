@@ -20,8 +20,18 @@ import FormCreateBill from "./components/FormCreateBill";
 
 function App() {
   axios.defaults.withCredentials = true;
-  const [isLoggedIn, setisLoggedIn] = useState(null);
+  const [isLoggedIn, setisLoggedIn] = useState(null); //need to change logic to include check for presence of cookies.
   let navigate = useNavigate();
+  const getCookie = function () {
+    const value = ("; " + document.cookie)
+      .split(`; connect.sid=`)
+      .pop()
+      .split(";")[0];
+    if (value) return true;
+
+    return false;
+  };
+  console.log(window.location.href);
   const Login = async (loginDetails) => {
     try {
       await axios
@@ -68,7 +78,7 @@ function App() {
         <Route
           path="/home"
           element={
-            <Protected isLoggedIn={isLoggedIn}>
+            <Protected isLoggedIn={getCookie}>
               <Home onClick={Logout} />
             </Protected>
           }
