@@ -155,10 +155,6 @@ router.post(
   }
 );
 router.get("/auth/logout", isAuth, (req, res) => {
-  //req.logOut();
-  //delete (req.session.isAuth);
-  //delete (req.session.userid);
-  //delete (req.session.isAdmin);
   req.session.destroy();
   res.status(200).json({ message: "Successfully logged out!" });
 });
